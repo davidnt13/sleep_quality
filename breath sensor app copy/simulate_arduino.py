@@ -48,8 +48,8 @@ sleep_active = False
 sleep_paused = False
 sleep_ended = False
 
-sleep_start_time = None 
-sleep_accumulated = 0.0 
+sleep_start_time = None
+sleep_accumulated = 0.0
 
 def get_sleep_accumulated():
     """Return total sleep in seconds including current active session."""
@@ -120,7 +120,7 @@ def fake_arduino_data():
 
 # ----------------------------------------------------------------------
 # Actual Arduino
-# ----------------------------------------------------------------------            
+# ----------------------------------------------------------------------
 def read_from_serial():
     """Continuously read Arduino data, track sleep state, and update daily summary."""
     ser = serial.Serial(arduino_port, baud_rate, timeout=1)
@@ -187,7 +187,7 @@ def read_from_serial():
 # ----------------------------------------------------------------------
 @app.route('/')
 def index():
-    return render_template('index2.html')
+    return render_template('index.html')
 
 @app.route('/alerts')
 def alerts():
@@ -241,7 +241,7 @@ def start_sleep():
     global sleep_active, sleep_paused, sleep_ended
     global sleep_start_time, sleep_accumulated
     global current_day
-    
+
     current_day = datetime.now().strftime("%Y-%m-%d")
 
     sleep_active = True
@@ -351,6 +351,7 @@ def hourly_saver():
 # ----------------------------------------------------------------------
 if __name__ == "__main__":
     threading.Thread(target=fake_arduino_data, daemon=True).start()
+    # threading.Thread(target=read_from_serial, daemon=True).start()
     threading.Thread(target=hourly_saver, daemon=True).start()
     print("Simulated Arduino thread started.")
     socketio.run(app, host="0.0.0.0", port=5001)
