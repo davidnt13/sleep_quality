@@ -87,6 +87,29 @@
     <a href="/learn">Learn</a>
 </div>
 
+<div class="sleep-controls" style="margin-top:20px;">
+    <button id="startBtn">Start Sleep</button>
+    <button id="toggleBtn">Pause</button>
+    <button id="endBtn">End Sleep</button>
+</div>
+
+<style>
+.sleep-controls button {
+    background: var(--accent);
+    color: #0b0c10;
+    border: none;
+    padding: 10px 16px;
+    margin-right: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+}
+.sleep-controls button:hover {
+    opacity: 0.8;
+}
+</style>
+
+
 <section class="grid">
     <div class="card">
         <h2>Current Breath Rate</h2>
@@ -110,7 +133,7 @@
     </div>
 
     <div class="card">
-        <h2>Sleep Stats</h2>
+        <h2>Recent Sleep Stats</h2>
         <div>Average Rate: <span id="avg">--</span> BPM</div>
         <div>Lowest Rate: <span id="min">--</span> BPM</div>
         <div>Highest Rate: <span id="max">--</span> BPM</div>
@@ -124,6 +147,47 @@
 </div>
 
 <script>
+
+// ---- SLEEP CONTROL BUTTONS ----
+function sendCommand(endpoint) {
+    fetch(endpoint)
+        .then(res => res.json())
+        .then(data => console.log("Server:", data))
+        .catch(err => console.error("Error:", err));
+}
+
+const startBtn  = document.getElementById("startBtn");
+const toggleBtn = document.getElementById("toggleBtn");
+const endBtn    = document.getElementById("endBtn");
+
+let isPaused = false;
+
+startBtn.onclick = () => {
+    sendCommand("/start_sleep");
+    toggleBtn.textContent = "Pause";
+    isPaused = false;
+};
+
+toggleBtn.onclick = () => {
+    if (isPaused) {
+        // currently paused → resume
+        sendCommand("/resume_sleep");
+        toggleBtn.textContent = "Pause";
+        isPaused = false;
+    } else {
+        // currently running → pause
+        sendCommand("/pause_sleep");
+        toggleBtn.textContent = "Resume";
+        isPaused = true;
+    }
+};
+
+endBtn.onclick = () => {
+    sendCommand("/end_sleep");
+    toggleBtn.textContent = "Pause";  // reset before next start
+    isPaused = false;
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     const socket = io();
 

@@ -286,6 +286,10 @@
                     <strong>Longest Pause:</strong> <span id="mPause">--</span
                     > s
                 </p>
+                <p>
+                    <strong>Total Sleep Time:</strong> <span id="mTotSleep">--</span
+                    > s
+                </p>
             </div>
         </div>
 
@@ -455,7 +459,7 @@
                 datasets: [{
                   label: 'Apnea Events (count)',
                   data: records.map(r => r.apnea_events),
-                  backgroundColor: '#f54242'
+                  backgroundColor: '#66fcf1'
                 }]
               },
               options: {
@@ -497,7 +501,7 @@
                 datasets: [{
                   label: 'Hypopnea Events (count)',
                   data: records.map(r => r.hypopnea_events),
-                  backgroundColor: '#f54242'
+                  backgroundColor: '#66fcf1'
                 }]
               },
               options: {
@@ -546,6 +550,25 @@
               document.getElementById('mPause').textContent = rec.longest_pause ?? '--';
               document.getElementById('mAHI').textContent = rec.AHI ?? '--';
               document.getElementById('dayModal').style.display = 'flex';
+              function formatSecondsToHMS(seconds) {
+                  if (seconds == null) return '--';
+              
+                  const hrs = Math.floor(seconds / 3600);
+                  const mins = Math.floor((seconds % 3600) / 60);
+                  const secs = Math.floor(seconds % 60);
+              
+                  if (hrs > 0) {
+                      // show hours:minutes
+                      return `${hrs}:${mins.toString().padStart(2, '0')}`;
+                  } else if (mins > 0) {
+                      // show minutes:seconds
+                      return `${mins}:${secs.toString().padStart(2, '0')}`;
+                  } else {
+                      // show seconds only
+                      return `0:${secs.toString().padStart(2, '0')}`;
+                  }
+              }
+              document.getElementById('mTotSleep').textContent = formatSecondsToHMS(rec.total_sleep_secs);
             }
             function hideModal(){ document.getElementById('dayModal').style.display='none'; }
             window.onclick = (e)=>{ if(e.target === document.getElementById('dayModal')) hideModal(); };

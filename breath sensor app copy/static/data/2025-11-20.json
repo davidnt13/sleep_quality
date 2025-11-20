@@ -1,0 +1,12 @@
+{
+  "date": "2025-11-20",
+  "avg_breath_rate": 30.0,
+  "min_breath_rate": 30.0,
+  "max_breath_rate": 30.0,
+  "avg_peaks_in_20": 8.97,
+  "apnea_events": 1,
+  "hypopnea_events": 1,
+  "AHI": 5,
+  "longest_pause": 0.0,
+  "total_sleep_secs": 10.732890129089355
+}
