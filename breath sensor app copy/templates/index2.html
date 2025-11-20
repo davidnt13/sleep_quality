@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Sleep Breath Monitor</title>
+
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --card: #1f2833;
+            --accent: #66fcf1;
+            --text: #c5c6c7;
+        }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            margin-top: 40px;
+            color: var(--accent);
+            font-size: 2.5em;
+        }
+        .topbar { margin-top: 10px; }
+        .topbar a {
+            color: var(--accent);
+            text-decoration: none;
+            border: 1px solid var(--accent);
+            padding: 6px 12px;
+            border-radius: 5px;
+            margin-right: 8px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 900px;
+            margin: 40px 0;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 0 10px #000;
+        }
+        .card h2 { color: var(--accent); margin-bottom: 10px; }
+        .value { font-size: 2.2em; color: #fff; }
+        .rate-smooth { color: #3dfca5; }
+        .peak { color: #f54242; font-weight: bold; }
+        #chart-container {
+            width: 90%;
+            max-width: 900px;
+            background: var(--card);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 60px;
+            box-shadow: 0 0 10px #000;
+            text-align: center;
+        }
+        .chart-title {
+            color: var(--accent);
+            margin: 0 0 15px 0;
+            font-weight: normal;
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+    </style>
+</head>
+
+<body>
+<h1>Welcome, David 👋</h1>
+
+<div class="topbar">
+    <a href="/">Dashboard</a>
+    <a href="/alerts">Abnormal Traces</a>
+    <a href="/metrics">Metrics</a>
+    <a href="/learn">Learn</a>
+</div>
+
+<section class="grid">
+    <div class="card">
+        <h2>Current Breath Rate</h2>
+        <div class="value" id="rate">-- bpm</div>
+        <div id="status"></div>
+    </div>
+
+    <div class="card">
+        <h2>Peaks in 20s</h2>
+        <div class="value" id="peaks20">--</div>
+    </div>
+
+    <div class="card">
+        <h2>Apneas This Evening</h2>
+        <div class="value" id="apneas">--</div>
+    </div>
+
+    <div class="card">
+        <h2>Hypopneas This Evening</h2>
+        <div class="value" id="hypopneas">--</div>
+    </div>
+
+    <div class="card">
+        <h2>Sleep Stats</h2>
+        <div>Average Rate: <span id="avg">--</span> BPM</div>
+        <div>Lowest Rate: <span id="min">--</span> BPM</div>
+        <div>Highest Rate: <span id="max">--</span> BPM</div>
+        <div>AHI: <span id="ahi">--</span></div>
+    </div>
+</section>
+
+<div id="chart-container">
+    <h2 class="chart-title">Breathing Waveform</h2>
+    <canvas id="breathChart" height="200"></canvas>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const socket = io();
+
+    // --- Chart setup ---
+    const ctx = document.getElementById("breathChart").getContext("2d");
+    const MAX_POINTS = 400;
+    const dataPoints = [];
+
+    const chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: Array(MAX_POINTS).fill(""),
+            datasets: [{
+                label: "Breathing Trace",
+                borderColor: "#66fcf1",
+                borderWidth: 2,
+                data: dataPoints,
+                tension: 0.3,
+                pointRadius: 0
+            }],
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            scales: {
+                y: { min: -1, max: 1, grid: { color: "#333" } },
+                x: { grid: { display: false } },
+            },
+            plugins: { legend: { display: false } },
+        },
+    });
+
+    // --- Metric elements ---
+    const rateDiv = document.getElementById("rate");
+    const peaks20Div = document.getElementById("peaks20");
+    const statusDiv = document.getElementById("status");
+    const avgSpan = document.getElementById("avg");
+    const minSpan = document.getElementById("min");
+    const maxSpan = document.getElementById("max");
+    const apneaEvents = document.getElementById("apneas");
+    const hypopneaEvents = document.getElementById("hypopneas");
+    const ahiDiv = document.getElementById("ahi");
+
+    let breathSamples = [];
+
+    socket.on("arduino_data", (data) => {
+        // --- Update waveform ---
+        if (typeof data.value !== "undefined") {
+            dataPoints.push(data.value);
+            if (dataPoints.length > MAX_POINTS) dataPoints.shift();
+            chart.update("none");
+        }
+
+        // --- Extract metrics ---
+        const breathRate = data.breath_rate || 0;
+        const peaks20 = data.peaks_in_20 || 0;
+        const peakFlag = data.peak || 0;
+        const apneas = data.apneas || 0;
+        const hypopneas = data.hypopneas || 0;
+        const ahi = data.AHI || 0;
+
+        // --- Rolling stats ---
+        breathSamples.push(breathRate);
+        if (breathSamples.length > 300) breathSamples.shift();
+
+        const avg = breathSamples.reduce((a,b)=>a+b,0)/breathSamples.length || 0;
+        const min = Math.min(...breathSamples);
+        const max = Math.max(...breathSamples);
+
+        // --- Update DOM ---
+        rateDiv.textContent = breathRate.toFixed(1) + " BPM";
+        peaks20Div.textContent = peaks20.toFixed(0);
+        avgSpan.textContent = avg.toFixed(1);// + " bpm";
+        minSpan.textContent = min.toFixed(1);// + " bpm";
+        maxSpan.textContent = max.toFixed(1);// + " bpm";
+        apneaEvents.textContent = apneas.toFixed(0);
+        hypopneaEvents.textContent = hypopneas.toFixed(0);
+        ahiDiv.textContent = ahi.toFixed(1);
+
+        // --- Inhale/Exhale status ---
+        if (peakFlag === 1) {
+            statusDiv.textContent = "Inhale Detected";
+            statusDiv.className = "peak";
+        } else {
+            statusDiv.textContent = "Exhale Detected";
+            statusDiv.className = "rate-smooth";
+        }
+
+        // --- Abnormal event snapshot ---
+        if (peaks20 < 2) {
+            const imgData = chart.toBase64Image();
+            fetch("/upload_snapshot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: imgData }),
+            })
+            .then(res => res.json())
+            .then(msg => console.log("Saved snapshot:", msg))
+            .catch(err => console.error("Upload failed:", err));
+        }
+    });
+});
+</script>
+</body>
+</html>

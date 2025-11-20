@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Sleep Metrics by Day</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            :root {
+                --bg: #0b0c10;
+                --card: #1f2833;
+                --accent: #66fcf1;
+                --text: #c5c6c7;
+            }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family: "Segoe UI", sans-serif;
+                text-align: center;
+                margin: 0;
+                padding: 0;
+            }
+            h1 {
+                color: var(--accent);
+                margin: 30px 0 10px;
+            }
+            /* --- Topbar --- */
+            .topbar {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+            .topbar a {
+                color: var(--accent);
+                text-decoration: none;
+                border: 1px solid var(--accent);
+                padding: 6px 14px;
+                border-radius: 6px;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
+            }
+
+            .topbar a:hover,
+            .topbar a.active {
+                background: var(--accent);
+                color: #000;
+                font-weight: bold;
+            }
+
+            /* --- Header Card --- */
+            .header-card {
+                background: var(--card);
+                box-shadow: 0 0 15px #000;
+                border-radius: 10px;
+                width: 90%;
+                max-width: 1050px;
+                margin: 40px auto 20px auto;
+                padding: 20px 30px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            /* --- Page Title --- */
+            .page-title {
+                color: var(--accent);
+                font-size: 2.2em;
+                font-weight: bold;
+                margin: 0 0 15px 0;
+                text-shadow: 0 0 6px rgba(102, 252, 241, 0.4);
+            }
+
+            /* --- Calendar --- */
+            #calendar-container {
+                margin: 0 auto;
+                text-align: center;
+                padding: 15px;
+                border: 2px solid var(--accent); /* outline */
+                border-radius: 10px; /* rounded corners */
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* optional shadow */
+                background: var(--card); /* optional background for contrast */
+                max-width: 350px;
+            }
+            #monthTitle {
+                font-size: 1.4em;
+                color: var(--accent);
+                margin: 10px 0;
+            }
+            #calendar {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+                width: 320px;
+                margin: 0 auto;
+            }
+            .day {
+                background: var(--card);
+                border-radius: 5px;
+                padding: 10px 0;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .day.active {
+                background: var(--accent);
+                color: #000;
+            }
+            .day.header {
+                background: none;
+                font-weight: bold;
+                cursor: default;
+            }
+
+            canvas {
+                max-width: 800px;
+                margin: 40px auto;
+                background: var(--card);
+                border-radius: 10px;
+                padding: 10px;
+            }
+            .chart-row {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 30px;
+                width: 95%;
+                max-width: 1300px;
+                margin: 40px auto;
+            }
+
+            .chart-card {
+                flex: 1 1 500px; /* equal width */
+                max-width: 600px;
+                background: var(--card);
+                border-radius: 10px;
+                box-shadow: 0 0 10px #000;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .chart-card h3 {
+                color: var(--accent);
+                margin: 0 0 10px 0;
+                font-weight: normal;
+            }
+
+            .chart-card canvas {
+                width: 100% !important; /* ensure same width */
+                height: 300px !important; /* fixed height for equality */
+            }
+            
+            /* --- Average Card (Centered) --- */
+            .average-card {
+                max-width: 600px;
+                width: 90%;
+                background: var(--card);
+                border-radius: 10px;
+                box-shadow: 0 0 10px #000;
+                padding: 30px 20px; /* extra top/bottom padding */
+                margin: 40px auto; /* centers horizontally and adds space above/below */
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .average-card h3 {
+                color: var(--accent);
+                margin: 0 0 15px 0;
+                font-weight: normal;
+            }
+            
+            .average-card canvas {
+                width: 100% !important;
+                height: 300px !important;
+                border-radius: 10px;
+            }
+
+            /* --- Modal --- */
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 10;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                justify-content: center;
+                align-items: center;
+            }
+            .modal-content {
+                background: var(--card);
+                color: var(--text);
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px #000;
+                max-width: 400px;
+                width: 90%;
+                text-align: left;
+            }
+            .modal-content h2 {
+                color: var(--accent);
+                margin-top: 0;
+            }
+            .close {
+                float: right;
+                font-size: 1.2em;
+                color: var(--accent);
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header-card">
+            <h1 class="page-title">Sleep Metrics by Day</h1>
+            <div class="topbar">
+                <a href="/">Dashboard</a>
+                <a href="/alerts">Abnormal Traces</a>
+                <a href="/metrics" class="active">Metrics</a>
+                <a href="/learn">Learn</a>
+            </div>
+        </div>
+
+        <!-- Calendar section -->
+        <div id="calendar-container">
+            <div id="monthTitle"></div>
+            <div id="calendar"></div>
+        </div>
+
+        <!-- Trend plots -->
+        <div class="chart-row">
+            <div class="chart-card">
+                <h3>Average Breath Rate per Night</h3>
+                <canvas id="avgChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Apnea-Hypopnea Index (AHI)</h3>
+                <canvas id="ahiChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-row">
+            <div class="chart-card">
+                <h3>Apnea Events per Night</h3>
+                <canvas id="apneaChart"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <h3>Hypopnea Events per Night</h3>
+                <canvas id="hypopneaChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Modal for day details -->
+        <div id="dayModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="hideModal()">&times;</span>
+                <h2 id="mDate">Metrics for </h2>
+                <p>
+                    <strong>Average Rate:</strong> <span id="mAvg">--</span> BPM
+                </p>
+                <p>
+                    <strong>Lowest Rate:</strong> <span id="mMin">--</span> BPM
+                </p>
+                <p>
+                    <strong>Highest Rate:</strong> <span id="mMax">--</span> BPM
+                </p>
+                <p>
+                    <strong>Apnea Events:</strong> <span id="mApnea">--</span>
+                </p>
+                <p>
+                    <strong>Hypopnea Events:</strong> <span id="mHypopnea"
+                        >--</span
+                    >
+                </p>
+                <p>
+                    <strong>Apnea-Hypopnea Index (AHI):</strong> <span id="mAHI"
+                        >--</span
+                    >
+                </p>
+                <p>
+                    <strong>Longest Pause:</strong> <span id="mPause">--</span
+                    > s
+                </p>
+            </div>
+        </div>
+
+        <script>
+            const records = {{ records|tojson }};
+            const cal = document.getElementById('calendar');
+            const monthTitle = document.getElementById('monthTitle');
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const monthName = new Intl.DateTimeFormat('en-US',{month:'long'}).format(now);
+            monthTitle.textContent = `${monthName} ${year}`;
+
+            const start = new Date(year, month, 1);
+            const end = new Date(year, month + 1, 0);
+
+            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            dayNames.forEach(d=>{
+              const h=document.createElement('div');
+              h.classList.add('day','header');
+              h.textContent=d;
+              cal.appendChild(h);
+            });
+            for(let i=0;i<start.getDay();i++) cal.appendChild(document.createElement('div'));
+
+            const datesWithData = new Set(records.map(r=>r.date));
+            for(let d=1; d <= end.getDate(); d++){
+              const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+              const el = document.createElement('div');
+              el.classList.add('day');
+              el.textContent = d;
+              if(datesWithData.has(dateStr)) el.classList.add('active');
+              el.onclick = ()=>showModal(dateStr);
+              cal.appendChild(el);
+            }
+
+            // Trend plots
+            // ---- Average Breath Rate (line) ----
+            const ctxA = document.getElementById('avgChart').getContext('2d');
+            new Chart(ctxA, {
+              type: 'line',
+              data: {
+                labels: records.map(r => r.date),
+                datasets: [{
+                  label: 'Average Breath Rate (bpm)',
+                  data: records.map(r => r.avg_breath_rate),
+                  borderColor: '#66fcf1',
+                  borderWidth: 2,
+                  tension: 0.3,
+                  fill: false
+                }]
+              },
+              options: {
+                plugins: {
+                  legend: { display: false} //labels: { color: '#c5c6c7' } }
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Date',
+                      color: '#c5c6c7',
+                      font: { size: 14 }
+                    },
+                    ticks: { color: '#c5c6c7' },
+                    grid: { color: '#333' }
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: 'Breath Rate (bpm)',
+                      color: '#c5c6c7',
+                      font: { size: 14 }
+                    },
+                    ticks: { color: '#c5c6c7' },
+                    grid: { color: '#333' }
+                  }
+                }
+              }
+            });
+            
+            // --- AHI Chart ---
+            const ctxAHI = document.getElementById('ahiChart').getContext('2d');
+            
+            // Function to determine color based on severity
+            function getAHIColor(ahi) {
+                if (ahi < 15) return '#3dfca5';   // Mild - green
+                if (ahi < 30) return '#f5d142';   // Moderate - yellow
+                return '#f54242';                  // Severe - red
+            }
+            
+            new Chart(ctxAHI, {
+                type: 'bar',
+                data: {
+                    labels: records.map(r => r.date),
+                    datasets: [{
+                        label: 'AHI',
+                        data: records.map(r => r.AHI),
+                        backgroundColor: records.map(r => getAHIColor(r.AHI))
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                              generateLabels: function(chart) {
+                                return [
+                                    {
+                                        text: 'Mild (<15)',
+                                        fillStyle: '#3dfca5',
+                                        strokeStyle: '#3dfca5',
+                                        fontColor: '#ffffff'
+                                    },
+                                    {
+                                        text: 'Moderate (15-29)',
+                                        fillStyle: '#f5d142',
+                                        strokeStyle: '#f5d142',
+                                        fontColor: '#ffffff'
+                                    },
+                                    {
+                                        text: 'Severe (30+)',
+                                        fillStyle: '#f54242',
+                                        strokeStyle: '#f54242',
+                                        fontColor: '#ffffff'
+                                    }
+                                ];
+                              }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                          grid: { color: '#333' }, 
+                          ticks: { color: '#c5c6c7' },
+                          title: {
+                            display: true,
+                            text: 'Date',
+                            color: '#c5c6c7',
+                            font: { size: 14 }
+                          },
+                        },
+                        
+                        y: { 
+                          grid: { color: '#333' }, 
+                          ticks: { color: '#c5c6c7' }, 
+                          beginAtZero: true,
+                          title: {
+                            display: true,
+                            text: 'AHI (Events/hour)',
+                            color: '#c5c6c7',
+                            font: { size: 14 }
+                          }, 
+                        }
+                    }
+                }
+            });
+
+
+            // ---- Apnea Events (bar) ----
+            const ctxB = document.getElementById('apneaChart').getContext('2d');
+            new Chart(ctxB, {
+              type: 'bar',
+              data: {
+                labels: records.map(r => r.date),
+                datasets: [{
+                  label: 'Apnea Events (count)',
+                  data: records.map(r => r.apnea_events),
+                  backgroundColor: '#f54242'
+                }]
+              },
+              options: {
+                plugins: {
+                  legend: { display: false} //labels: { color: '#c5c6c7' } }
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Date',
+                      color: '#c5c6c7',
+                      font: { size: 14 }
+                    },
+                    ticks: { color: '#c5c6c7' },
+                    grid: { color: '#333' }
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: 'Apnea Events (count)',
+                      color: '#c5c6c7',
+                      font: { size: 14 }
+                    },
+                    ticks: { color: '#c5c6c7' },
+                    grid: { color: '#333' },
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+            
+            // ---- Hypopnea Events (bar) ----
+            const ctxC = document.getElementById('hypopneaChart').getContext('2d');
+            new Chart(ctxC, {
+              type: 'bar',
+              data: {
+                labels: records.map(r => r.date),
+                datasets: [{
+                  label: 'Hypopnea Events (count)',
+                  data: records.map(r => r.hypopnea_events),
+                  backgroundColor: '#f54242'
+                }]
+              },
+              options: {
+                plugins: {
+                  legend: { display: false} //labels: { color: '#c5c6c7' } }
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Date',
+                      color: '#c5c6c7',
+                      font: { size: 14 }
+                    },
+                    ticks: { color: '#c5c6c7' },
+                    grid: { color: '#333' }
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: 'Hypopnea Events (count)',
+                      color: '#c5c6c7',
+                      font: { size: 14 }
+                    },
+                    ticks: { color: '#c5c6c7' },
+                    grid: { color: '#333' },
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+
+            // Modal behavior
+            function showModal(dateStr){
+              const rec=records.find(r=>r.date===dateStr);
+              if(!rec) return;
+              // document.getElementById('mDate').textContent='Metrics for '+rec.date;
+              const [year, month, day] = rec.date.split('-');
+              const formattedDate = `${new Date(rec.date).toLocaleString('default', { month: 'long' })} ${parseInt(day)}, ${year}`;
+              document.getElementById('mDate').textContent = 'Metrics for ' + formattedDate;
+              document.getElementById('mAvg').textContent = rec.avg_breath_rate?.toFixed(1) ?? '--';
+              document.getElementById('mMin').textContent = rec.min_breath_rate?.toFixed(1) ?? '--';
+              document.getElementById('mMax').textContent = rec.max_breath_rate?.toFixed(1) ?? '--';
+              document.getElementById('mApnea').textContent = rec.apnea_events ?? '--';
+              document.getElementById('mHypopnea').textContent = rec.hypopnea_events ?? '--';
+              document.getElementById('mPause').textContent = rec.longest_pause ?? '--';
+              document.getElementById('mAHI').textContent = rec.AHI ?? '--';
+              document.getElementById('dayModal').style.display = 'flex';
+            }
+            function hideModal(){ document.getElementById('dayModal').style.display='none'; }
+            window.onclick = (e)=>{ if(e.target === document.getElementById('dayModal')) hideModal(); };
+        </script>
+    </body>
+</html>

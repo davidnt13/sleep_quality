@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Sleep Breath Monitor</title>
+
+        <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <style>
+            :root {
+                --bg: #0b0c10;
+                --card: #1f2833;
+                --accent: #66fcf1;
+                --text: #c5c6c7;
+            }
+            body {
+                margin: 0;
+                font-family: "Segoe UI", sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-height: 100vh;
+            }
+            h1 {
+                margin-top: 40px;
+                color: var(--accent);
+                font-size: 2.5em;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 20px;
+                width: 90%;
+                max-width: 900px;
+                margin: 40px 0;
+            }
+            .card {
+                background: var(--card);
+                border-radius: 10px;
+                padding: 25px;
+                box-shadow: 0 0 10px #000;
+            }
+            .card h2 {
+                color: var(--accent);
+                margin-bottom: 10px;
+            }
+            .value {
+                font-size: 2.2em;
+                color: #fff;
+            }
+            .rate-smooth {
+                color: #3dfca5;
+            }
+            .peak {
+                color: #f54242;
+                font-weight: bold;
+            }
+            #chart-container {
+                width: 90%;
+                max-width: 900px;
+                background: var(--card);
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 60px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Welcome, David 👋</h1>
+
+        <section class="grid">
+            <div class="card">
+                <h2>Current Breath Rate</h2>
+                <div class="value" id="rate">-- bpm</div>
+                <div id="status"></div>
+            </div>
+            <div class="card">
+                <h2>Peaks (20 s Window)</h2>
+                <div class="value" id="peaks20">--</div>
+            </div>
+            <div class="card">
+                <h2>Last Night Stats</h2>
+                <div>Average Rate: <span id="avg">--</span></div>
+                <div>Lowest Rate: <span id="min">--</span></div>
+                <div>Highest Rate: <span id="max">--</span></div>
+            </div>
+        </section>
+
+        <!-- Live breathing waveform plot -->
+        <div id="chart-container">
+            <canvas id="breathChart" height="200"></canvas>
+        </div>
+
+        <script>
+            const socket = io();
+
+            // --- chart setup ---
+            const ctx = document.getElementById("breathChart").getContext("2d");
+            const MAX_POINTS = 400;
+            const dataPoints = [];
+
+            const chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: Array(MAX_POINTS).fill(""),
+                    datasets: [
+                        {
+                            label: "Breathing Trace",
+                            borderColor: "#66fcf1",
+                            borderWidth: 2,
+                            data: dataPoints,
+                            tension: 0.3,
+                            pointRadius: 0,
+                        },
+                    ],
+                },
+                options: {
+                    animation: false,
+                    responsive: true,
+                    scales: {
+                        y: { min: -1, max: 1, grid: { color: "#333" } },
+                        x: { grid: { display: false } },
+                    },
+                    plugins: { legend: { display: false } },
+                },
+            });
+
+            // --- metric elements ---
+            let samples = [];
+            const rateDiv = document.getElementById("rate");
+            const peaks20Div = document.getElementById("peaks20");
+            const statusDiv = document.getElementById("status");
+            const avgSpan = document.getElementById("avg");
+            const minSpan = document.getElementById("min");
+            const maxSpan = document.getElementById("max");
+
+            socket.on("arduino_data", (data) => {
+                // update waveform (data.value)
+                if (typeof data.value !== "undefined") {
+                    dataPoints.push(data.value);
+                    if (dataPoints.length > MAX_POINTS) dataPoints.shift();
+                    chart.update("none"); // real‑time update without animation
+                }
+
+                // breathing metrics
+                const breathRate = data.breath_rate || 0;
+                const peaks20 = data.peaks_in_20 || 0;
+                const peakFlag = data.peak || 0;
+
+                samples.push(breathRate);
+                if (samples.length > 300) samples.shift();
+
+                const avg =
+                    samples.reduce((a, b) => a + b, 0) / samples.length || 0;
+                const min = Math.min(...samples);
+                const max = Math.max(...samples);
+
+                rateDiv.textContent = breathRate.toFixed(1) + " bpm";
+                peaks20Div.textContent = peaks20.toFixed(0);
+                avgSpan.textContent = avg.toFixed(1) + " bpm";
+                minSpan.textContent = min.toFixed(1) + " bpm";
+                maxSpan.textContent = max.toFixed(1) + " bpm";
+
+                if (peakFlag === 1) {
+                    statusDiv.textContent = "Inhale Detected";
+                    statusDiv.className = "peak";
+                } else {
+                    statusDiv.textContent = "Exhale Detected";
+                    statusDiv.className = "rate-smooth";
+                }
+            });
+        </script>
+    </body>
+</html>

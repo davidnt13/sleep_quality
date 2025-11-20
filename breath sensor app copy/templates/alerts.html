@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Abnormal Breathing Traces</title>
+  <style>
+      :root {
+          --bg: #0b0c10;
+          --card: #1f2833;
+          --accent: #66fcf1;
+          --text: #c5c6c7;
+      }
+  
+      body {
+          background: var(--bg);
+          color: var(--text);
+          font-family: "Segoe UI", sans-serif;
+          text-align: center;
+          margin: 0;
+          padding: 0;
+      }
+  
+      h1 {
+          color: var(--accent);
+          margin: 30px 0 10px;
+      }
+  
+      /* Header card container */
+      .header-card {
+          background: var(--card);
+          box-shadow: 0 0 15px #000;
+          border-radius: 10px;
+          width: 90%;
+          max-width: 1050px;
+          margin: 40px auto 20px auto;
+          padding: 20px 30px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+      }
+  
+      .page-title {
+          color: var(--accent);
+          font-size: 2.2em;
+          font-weight: bold;
+          margin: 0 0 15px 0;
+          text-shadow: 0 0 6px rgba(102, 252, 241, 0.4);
+      }
+  
+      /* Top navigation bar */
+      .topbar {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: center;
+          margin-bottom: 20px;
+      }
+  
+      .topbar a {
+          color: var(--accent);
+          text-decoration: none;
+          border: 1px solid var(--accent);
+          padding: 6px 14px;
+          border-radius: 6px;
+          transition: background 0.2s, color 0.2s;
+      }
+  
+      .topbar a:hover {
+          background: var(--accent);
+          color: #000;
+      }
+  
+      .topbar a.active {
+          background: var(--accent);
+          color: #000;
+          font-weight: bold;
+      }
+    .grid {
+      display:flex; flex-wrap:wrap;
+      justify-content:center;
+      gap:20px;
+      padding:20px;
+    }
+    .thumb {
+      background:#1f2833;
+      border-radius:8px;
+      padding:10px;
+      box-shadow:0 0 10px #000;
+      width:320px;
+    }
+    img {
+      width:100%;
+      border-radius:5px;
+    }
+    p { width:100%; }
+  </style>
+</head>
+<body>
+    <div class="header-card">
+      <h1 class="page-title">Abnormal Breathing Events</h1>
+      <div class="topbar">
+        <a href="/">Dashboard</a>
+        <a href="/alerts">Abnormal Traces</a>
+        <a href="/metrics">Metrics</a>
+        <a href="/learn">Learn</a>
+      </div>
+    </div>
+  <!--<h1>Abnormal Breathing Events</h1>
+  <div class="topbar">
+    <a href="/">Dashboard</a>
+    <a href="/alerts">Refresh</a>
+  </div>-->
+  <div class="grid">
+    {% for img in images %}
+      <div class="thumb">
+        <img src="{{ url_for('static', filename=img) }}" alt="{{ img }}">
+        <div>{{ img.split('/')[-1] }}</div>
+      </div>
+    {% else %}
+      <p>No abnormal traces recorded yet.</p>
+    {% endfor %}
+  </div>
+</body>
+</html>

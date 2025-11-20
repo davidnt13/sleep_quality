@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Learn More - Sleep Breath Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --card: #1f2833;
+            --accent: #66fcf1;
+            --text: #c5c6c7;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        h1 {
+            color: var(--accent);
+            margin: 30px 0 10px;
+        }
+        
+        /* Header card container */
+        .header-card {
+            background: var(--card);
+            box-shadow: 0 0 15px #000;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 1050px;
+            margin: 40px auto 20px auto;
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    
+        .page-title {
+            color: var(--accent);
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-shadow: 0 0 6px rgba(102, 252, 241, 0.4);
+        }
+    
+        /* Top navigation bar */
+        .topbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+    
+        .topbar a {
+            color: var(--accent);
+            text-decoration: none;
+            border: 1px solid var(--accent);
+            padding: 6px 14px;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
+        }
+    
+        .topbar a:hover {
+            background: var(--accent);
+            color: #000;
+        }
+    
+        .topbar a.active {
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* --- Card for Learn Content --- */
+        .card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px auto;
+            width: 90%;
+            max-width: 900px;
+            box-shadow: 0 0 10px #000;
+            text-align: left;
+        }
+
+        .card h2 {
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .card p, .card ul {
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+
+        .card ul li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-card">
+        <h1 class="page-title">Learn More About Sleep Breathing</h1>
+    
+        <div class="topbar">
+            <a href="/">Dashboard</a>
+            <a href="/alerts">Abnormal Traces</a>
+            <a href="/metrics">Metrics</a>
+            <a href="/learn" class="active">Learn More</a>
+        </div>
+    </div>
+    
+    <div class="header-card">
+        <h2>Understanding Your Sleep Metrics</h2>
+        <p>Track and understand your breath rate, apneas, hypopneas, and AHI to monitor sleep quality.</p>
+    </div>
+    
+    <div class="card">
+        <h2 style="text-align:center; width:100%;">What Happens When You Sleep</h2>
+        <p>Sleep is a complex process which allows for the regulation of tissues, organs, and systems throughout the body.
+            It is important for maintaining your body's activity and is a necessary component of a healthy lifestyle. Disruptions in sleep
+            can cause health problems such as high blood pressure, cardiovascular disease, and depression [1]. </p>
+        <p style="font-weight: bold;">
+            See below to learn more about different sleep-based components this tool focuses on:
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Breathing Metrics</h2>
+        <p>Breathing is a very important component of sleep quality analysis. Over the course of the sleep cycle, your respiration rate-- or
+           your breath rate-- fluctuates, slowing down during deep sleep and speeding up during REM sleep. Understanding these
+           changes can provide identification of irregularities such as apneas, hypopneas, and tachypneas [2].</p>
+    </div>
+
+    <div class="card">
+        <h2>Apneas & Hypopneas</h2>
+        <p><strong>Apnea:</strong> A full pause in breathing for 10 seconds or longer. These pauses during sleep can be indicative of sleep-related
+            breathing disorders such as obstructive or central sleep apnea [2]. Obstructive sleep apnea is actually severely overlooked, with up to 
+            80% of cases remaining underdiagnosed [3]. This makes tools like ours pivotal for ensuring proper sleep performance.</p>
+        <p><strong>Hypopnea:</strong> A partial reduction in breathing during sleep that results in shallow breathing episodes. This is another
+            indicator of sleep apnea disorders [4].</p>
+    </div>
+
+    <div class="card">
+        <h2>Apnea-Hypopnea Index (AHI)</h2>
+        <p>AHI measures the number of apnea and hypopnea events per hour. It is a useful metric for diagnosing and measuring the severity of 
+           sleep apnea in patients [5]. The following categories are used to classify the severity of these apnea and hypopnea events:</p>
+        <ul>
+            <li><strong>Mild:</strong> 5–14 events per hour</li>
+            <li><strong>Moderate:</strong> 15–29 events per hour</li>
+            <li><strong>Severe:</strong> 30+ events per hour</li>
+        </ul>
+    </div>
+    
+    <div class="card">
+        <h2>References</h2>
+        <p>[1] National Institute of Neurological Disorders and Stroke, “Brain basics: Understanding sleep,” National Institute of Neurological Disorders and Stroke, Sep. 05, 2024. https://www.ninds.nih.gov/health-information/public-education/brain-basics/brain-basics-understanding-sleep
+        </p>
+        <p>
+            [2]
+             “Sleep Respiratory Rate,” SleepApnea.org, Apr. 01, 2023. https://www.sleepapnea.org/sleep-health/sleep-respiratory-rate/
+        </p>
+        <p>
+            [3]
+            Resmed, “OSA underdiagnosis: A World of Difference, a Common Challenge | Sleep Institute,” Resmedsleepinstitute.com, Sep. 24, 2025. https://www.resmedsleepinstitute.com/sleep-apnea/osa-underdiagnosis-closing-the-care-gap (accessed Nov. 20, 2025).
+        </p>
+        <p>
+            [4]
+            “What is Hypopnea?,” Sleep Foundation, May 25, 2021. https://www.sleepfoundation.org/sleep-apnea/hypopnea
+        </p>
+        <p>
+            [5]
+            C. Clinic, “Apnea-Hypopnea Index (AHI): What It Is & Ranges,” Cleveland Clinic, Feb. 21, 2025. https://my.clevelandclinic.org/health/articles/apnea-hypopnea-index-ahi
+            </p>
+    </div>
+
+</body>
+</html>

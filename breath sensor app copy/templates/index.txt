@@ -1,0 +1,10 @@
+Welcome, David 👋
+Current Breath Rate
+-- bpm
+
+Peaks (20 s window)
+--
+Last Night Stats
+Average Rate: --
+Lowest Rate: --
+Highest Rate: --
